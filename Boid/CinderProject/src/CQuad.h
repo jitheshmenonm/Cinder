@@ -15,7 +15,7 @@ public:
 	bool IsPtInsideQuad(vec2 pt);
 	void SetRoot();
 	bool IsRoot() const;
-	void AddLeaf(CBoid* ptr);
+	void AddLeaf(CBoid* ptr);//Simply add this boid to leaves
 	int NoOfLeaves() const;
 	bool HasLeaves() const;
 	void RemoveLeaves();
@@ -28,8 +28,10 @@ public:
 
 	bool HasNoChildQuad();
 
-	void AddBoid(CBoid* ptrBoidToAdd);
+	void AddBoid(CBoid* ptrBoidToAdd);//This can be recursive and ends up calling AddLeaf
 	bool CanSubDivideFurther();
+
+	void DestroyChildQuads();
 
 private:
 	vec2 m_ptTopLeft;
@@ -41,6 +43,6 @@ private:
 	CQuad* m_ptrBottomRightChild;
 	
 	bool m_bRoot;
-	std::vector<CBoid*> m_pLeaves;//convert to shared ptr!!!!!!!!
+	std::vector<CBoid*> m_pLeaves;//convert to shared ptr:TODO
 };
 

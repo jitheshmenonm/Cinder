@@ -23,7 +23,35 @@ CQuad::CQuad(vec2 ptTl, vec2 ptBr):m_bRoot(false),
 }
 
 CQuad::~CQuad()
+{	
+}
+
+void CQuad::DestroyChildQuads()
 {
+	if (m_ptrTopLeftChild)
+	{
+		m_ptrTopLeftChild->DestroyChildQuads();
+		delete m_ptrTopLeftChild;
+		m_ptrTopLeftChild = nullptr;
+	}
+	if (m_ptrTopRightChild)
+	{
+		m_ptrTopRightChild->DestroyChildQuads();
+		delete m_ptrTopRightChild;
+		m_ptrTopRightChild = nullptr;
+	}
+	if (m_ptrBottomLeftChild)
+	{
+		m_ptrBottomLeftChild->DestroyChildQuads();
+		delete m_ptrBottomLeftChild;
+		m_ptrBottomLeftChild = nullptr;
+	}
+	if (m_ptrBottomRightChild)
+	{
+		m_ptrBottomRightChild->DestroyChildQuads();
+		delete m_ptrBottomRightChild;
+		m_ptrBottomRightChild = nullptr;
+	}
 }
 
 void CQuad::SetRoot()
@@ -121,74 +149,46 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 		glm::vec2 middleLeftPt (m_ptTopLeft.x, (m_ptTopLeft.y + (QuadHeight / 2.0)));
 		glm::vec2 middleRightPt ((m_ptTopLeft.x + QuadWidth), (m_ptTopLeft.y + (QuadHeight / 2.0)));
 
+
+		auto funcAddLeafRecursively = [](CQuad* pQuad, glm::vec2 tlPt, glm::vec2 brPt, CBoid* ptrBoid)
+		{
+			if (!pQuad)
+				pQuad = new CQuad(tlPt, brPt);//Use object pools so as to allocate memory in chunk firsthand:TODO
+
+			if (pQuad->HasLeaves() && pQuad->CanSubDivideFurther())
+			{
+				//Any Quad should not have more than one leaf if it can subdivide further
+				assert(pQuad->NoOfLeaves() == 1);
+
+				//move the current leaf downstream by splitting further 
+				pQuad->AddBoid(pQuad->GetTopLeaf());///RECURSION..........
+				pQuad->RemoveLeaves();//reset current leaves					
+
+				//now add the current one as leaf
+				pQuad->AddBoid(ptrBoid);///RECURSION..........
+			}
+			else//cant sub divide further
+				pQuad->AddLeaf(ptrBoid);//add leaf to sub tree				
+		};
+
 		//top Left sub Quad- uses m_ptTopLeft and middlePt
 		if ((pt.x > m_ptTopLeft.x && pt.x < middlePt.x) && (pt.y > m_ptTopLeft.y && pt.y < middlePt.y))
-		{
-			if (m_ptrTopLeftChild)
-			{
-				if (m_ptrTopLeftChild->HasLeaves() && m_ptrTopLeftChild->CanSubDivideFurther())
-				{
-					assert(m_ptrTopLeftChild->NoOfLeaves() == 1);
-					
-					//move the current leaf downstream by splitting further 
-					m_ptrTopLeftChild->AddBoid(m_ptrTopLeftChild->GetTopLeaf());//add leaf to sub tree
-					m_ptrTopLeftChild->RemoveLeaves();//reset current leaves					
-
-					//now add the current one as leaf
-					m_ptrTopLeftChild->AddBoid(ptrBoidToAdd);
-				}
-				else//cant sub divide further
-					m_ptrTopLeftChild->AddLeaf(ptrBoidToAdd);//add leaf to sub tree				
-			}
-			else
-			{
-				m_ptrTopLeftChild = new CQuad(m_ptTopLeft, middlePt);
-				m_ptrTopLeftChild->AddLeaf(ptrBoidToAdd);
-			}
-		}
+			funcAddLeafRecursively(m_ptrTopLeftChild, m_ptTopLeft, middlePt, ptrBoidToAdd);
 		//top Right sub Quad- uses  middleUpPt and middleRightPt
 		if ((pt.x > middleUpPt.x && pt.x < middleRightPt.x) && (pt.y > middleUpPt.y && pt.y < middleRightPt.y))
-		{
-			if (m_ptrTopRightChild)
-			{
-			}
-			else
-			{
-				m_ptrTopRightChild = new CQuad(middleUpPt, middleRightPt);
-				m_ptrTopRightChild->AddLeaf(ptrBoidToAdd);
-			}
-		}
+			funcAddLeafRecursively(m_ptrTopRightChild, middleUpPt, middleRightPt, ptrBoidToAdd);			
 		//bottom Left  sub Quad- uses middleLeftPt and middleDownPt
 		if ((pt.x > middleLeftPt.x && pt.x < middleDownPt.x) && (pt.y > middleLeftPt.y && pt.y < middleDownPt.y))
-		{
-			if (m_ptrBottomLeftChild)
-			{
-			}
-			else
-			{
-				m_ptrBottomLeftChild = new CQuad(middleLeftPt, middleDownPt);
-				m_ptrBottomLeftChild->AddLeaf(ptrBoidToAdd);
-			}
-		}
+			funcAddLeafRecursively(m_ptrBottomLeftChild, middleLeftPt, middleDownPt, ptrBoidToAdd);
 		//bottom Right sub Quad- uses middlePt and m_ptBottomRight
 		if ((pt.x > middlePt.x && pt.x < m_ptBottomRight.x) && (pt.y > middlePt.y && pt.y < m_ptBottomRight.y))
-		{
-			if (m_ptrBottomRightChild)
-			{
-			}
-			else
-			{
-				m_ptrBottomRightChild = new CQuad(middlePt, m_ptBottomRight);
-				m_ptrBottomRightChild->AddLeaf(ptrBoidToAdd);
-			}
-		}
-
+			funcAddLeafRecursively(m_ptrBottomRightChild, middlePt, m_ptBottomRight, ptrBoidToAdd);
 	}
 }
 
-void DestroyQuadTree(CBoid* ptrRoot)
+void DestroyQuadTree(CQuad* ptrRoot)
 {
-
+	ptrRoot->DestroyChildQuads();
 }
 
 void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)

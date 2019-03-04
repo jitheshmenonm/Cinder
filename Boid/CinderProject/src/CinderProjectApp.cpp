@@ -25,10 +25,9 @@ std::vector<CBoid> boids;
 std::vector<vec2> obstacleCircles;
 
 ///Quad tree functions
-extern void BuildQuadTree(CBoid* ptrRoot);
-extern void DestroyQuadTree(CBoid* ptrRoot);
-extern void UpdateQuadTree(std::vector<CBoid>& boids);
-CQuad * ptrRoot;
+extern void DestroyQuadTree(CQuad* ptrRoot);
+extern void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids);
+CQuad * ptrRoot;//global root object which gets created on start up
 ///
 
 static bool blogtofile = false;
@@ -95,7 +94,10 @@ void CinderProjectApp::mouseDown( MouseEvent event )
 	if (event.isRightDown())
 		globalTarget = vec2((float)event.getX(), (float)event.getY());
 	if (event.isMiddleDown())
-		boids.clear();			
+	{
+		boids.clear();
+		DestroyQuadTree(ptrRoot);
+	}
 }
 void CinderProjectApp::keyDown(KeyEvent event)
 {
@@ -119,7 +121,11 @@ void CinderProjectApp::mouseMove(MouseEvent event)
 void CinderProjectApp::update()
 {
 	UpdateBoidPositions();
-	UpdateQuadTree(boids);
+	if (!boids.empty())
+	{
+		DestroyQuadTree(ptrRoot);
+		UpdateQuadTree(ptrRoot, boids);
+	}
 }
 
 void CinderProjectApp::draw()

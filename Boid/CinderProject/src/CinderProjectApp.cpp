@@ -20,7 +20,7 @@ using namespace std;
 #define OBSTACLECIRCLERADIUS HALFBOIDSIZE
 
 bool bSeekTarget = false;
-static vec2 globalTarget = vec2(800.0,600.0);
+static vec2 globalTarget = vec2(800.0, 600.0);
 std::vector<CBoid> boids;
 std::vector<vec2> obstacleCircles;
 
@@ -28,7 +28,7 @@ std::vector<vec2> obstacleCircles;
 extern void DestroyQuadTree(CQuad* ptrRoot);
 extern void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids);
 CQuad * ptrRoot;//global root object which gets created on start up
-///
+				///
 
 static bool blogtofile = false;
 void Logtofile(std::string name, float value)
@@ -55,24 +55,24 @@ void DrawBoidAndObstacles()
 		boid.Draw();
 	gl::color(Color(1, 0, 0)); // red
 	for (auto oc : obstacleCircles)
-		gl::drawSolidCircle(vec2(oc.x,oc.y), OBSTACLECIRCLERADIUS);
-	
+		gl::drawSolidCircle(vec2(oc.x, oc.y), OBSTACLECIRCLERADIUS);
+
 }
 void UpdateBoidPositions()
 {
 	for (auto & boid : boids)
 	{
-		if(bSeekTarget)
+		if (bSeekTarget)
 			boid.Seek(globalTarget);
 		boid.UpdateLocation();
-	}		
+	}
 }
 
 class CinderProjectApp : public App {
-  public:
+public:
 	void setup() override;
-	void mouseDown( MouseEvent event ) override;
-	void mouseMove( MouseEvent event) override;
+	void mouseDown(MouseEvent event) override;
+	void mouseMove(MouseEvent event) override;
 	void keyDown(KeyEvent event) override;
 	void update() override;
 	void draw() override;
@@ -86,11 +86,11 @@ void CinderProjectApp::setup()
 	ptrRoot->SetRoot();
 }
 
-void CinderProjectApp::mouseDown( MouseEvent event )
+void CinderProjectApp::mouseDown(MouseEvent event)
 {
 	if (event.isLeftDown())
 		obstacleCircles.emplace_back((float)event.getX(), (float)event.getY());
-		
+
 	if (event.isRightDown())
 		globalTarget = vec2((float)event.getX(), (float)event.getY());
 	if (event.isMiddleDown())
@@ -102,20 +102,23 @@ void CinderProjectApp::mouseDown( MouseEvent event )
 void CinderProjectApp::keyDown(KeyEvent event)
 {
 	float min = 100.0;
-	float max = WINDOWSIZEX-100.0f;
+	float max = WINDOWSIZEX - 100.0f;
 	float xCenter = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));
-	min = 100.0;max = WINDOWSIZEY-100.0;
+	min = 100.0; max = WINDOWSIZEY - 100.0;
 	float yCenter = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));
 
 	if (event.getChar() == 'a')
+	{
 		boids.emplace_back(xCenter, yCenter);
+		ptrRoot->AddBoid(&boids.front());
+	}
 	else if (event.getChar() == 's')
 		bSeekTarget = true;
 }
 void CinderProjectApp::mouseMove(MouseEvent event)
 {
-	if(bSeekTarget)
-		globalTarget= vec2((float)event.getX(), (float)event.getY());
+	if (bSeekTarget)
+		globalTarget = vec2((float)event.getX(), (float)event.getY());
 }
 
 void CinderProjectApp::update()
@@ -123,15 +126,15 @@ void CinderProjectApp::update()
 	UpdateBoidPositions();
 	if (!boids.empty())
 	{
-		DestroyQuadTree(ptrRoot);
-		UpdateQuadTree(ptrRoot, boids);
+		//DestroyQuadTree(ptrRoot);
+		UpdateQuadTree(ptrRoot, boids);//update tree using latest boid locations
 	}
 }
 
 void CinderProjectApp::draw()
 {
-	gl::clear( Color( 0, 0, 0 ) );
+	gl::clear(Color(0, 0, 0));
 	DrawBoidAndObstacles();
 }
 
-CINDER_APP( CinderProjectApp, RendererGl )
+CINDER_APP(CinderProjectApp, RendererGl)

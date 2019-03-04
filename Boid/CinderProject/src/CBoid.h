@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define BOIDSIZE 10
+#define BOIDSIZE 30
 #define QUARTERBOIDSIZE 0.25*BOIDSIZE
 #define HALFBOIDSIZE 0.5*BOIDSIZE
 

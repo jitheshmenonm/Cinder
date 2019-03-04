@@ -2,28 +2,28 @@
 #include "CBoid.h"
 #include "CQuad.h"
 
-CQuad::CQuad():m_bRoot(false),
-			   m_ptTopLeft(0.0,0.0),
-			   m_ptBottomRight(0.0,0.0),
-			   m_ptrTopLeftChild(nullptr),
-			   m_ptrTopRightChild(nullptr),
-			   m_ptrBottomLeftChild(nullptr),
-			   m_ptrBottomRightChild(nullptr)
+CQuad::CQuad() :m_bRoot(false),
+m_ptTopLeft(0.0, 0.0),
+m_ptBottomRight(0.0, 0.0),
+m_ptrTopLeftChild(nullptr),
+m_ptrTopRightChild(nullptr),
+m_ptrBottomLeftChild(nullptr),
+m_ptrBottomRightChild(nullptr)
 {
 }
-CQuad::CQuad(vec2 ptTl, vec2 ptBr):m_bRoot(false),
-								   m_ptTopLeft(ptTl),
-								   m_ptBottomRight(ptBr),
-								   m_ptrTopLeftChild(nullptr),
-								   m_ptrTopRightChild(nullptr),
-								   m_ptrBottomLeftChild(nullptr),
-								   m_ptrBottomRightChild(nullptr)
+CQuad::CQuad(vec2 ptTl, vec2 ptBr) :m_bRoot(false),
+m_ptTopLeft(ptTl),
+m_ptBottomRight(ptBr),
+m_ptrTopLeftChild(nullptr),
+m_ptrTopRightChild(nullptr),
+m_ptrBottomLeftChild(nullptr),
+m_ptrBottomRightChild(nullptr)
 {
 
 }
 
 CQuad::~CQuad()
-{	
+{
 }
 
 void CQuad::DestroyChildQuads()
@@ -140,17 +140,17 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 	if (IsPtInsideQuad(pt))
 	{
 		float QuadWidth = (m_ptBottomRight.x - m_ptTopLeft.x);
-		float QuadHeight = (m_ptBottomRight.x - m_ptTopLeft.x);
+		float QuadHeight = (m_ptBottomRight.y - m_ptTopLeft.y);
 
 		//calculate the releavent points for the sub quads 		
-		glm::vec2 middlePt ((m_ptTopLeft.x + (QuadWidth / 2.0)), (m_ptTopLeft.y + (QuadHeight / 2.0)));
-		glm::vec2 middleUpPt ((m_ptTopLeft.x + (QuadWidth / 2.0)), m_ptTopLeft.y);
-		glm::vec2 middleDownPt ((m_ptTopLeft.x + (QuadWidth / 2.0)), (m_ptTopLeft.y + QuadHeight));
-		glm::vec2 middleLeftPt (m_ptTopLeft.x, (m_ptTopLeft.y + (QuadHeight / 2.0)));
-		glm::vec2 middleRightPt ((m_ptTopLeft.x + QuadWidth), (m_ptTopLeft.y + (QuadHeight / 2.0)));
+		glm::vec2 middlePt((m_ptTopLeft.x + (QuadWidth / 2.0)), (m_ptTopLeft.y + (QuadHeight / 2.0)));
+		glm::vec2 middleUpPt((m_ptTopLeft.x + (QuadWidth / 2.0)), m_ptTopLeft.y);
+		glm::vec2 middleDownPt((m_ptTopLeft.x + (QuadWidth / 2.0)), (m_ptTopLeft.y + QuadHeight));
+		glm::vec2 middleLeftPt(m_ptTopLeft.x, (m_ptTopLeft.y + (QuadHeight / 2.0)));
+		glm::vec2 middleRightPt((m_ptTopLeft.x + QuadWidth), (m_ptTopLeft.y + (QuadHeight / 2.0)));
 
 
-		auto funcAddLeafRecursively = [](CQuad* pQuad, glm::vec2 tlPt, glm::vec2 brPt, CBoid* ptrBoid)
+		auto funcAddLeafRecursively = [](CQuad*& pQuad, glm::vec2 tlPt, glm::vec2 brPt, CBoid* ptrBoid) mutable
 		{
 			if (!pQuad)
 				pQuad = new CQuad(tlPt, brPt);//Use object pools so as to allocate memory in chunk firsthand:TODO
@@ -164,7 +164,7 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 				pQuad->AddBoid(pQuad->GetTopLeaf());///RECURSION..........
 				pQuad->RemoveLeaves();//reset current leaves					
 
-				//now add the current one as leaf
+									  //now add the current one as leaf
 				pQuad->AddBoid(ptrBoid);///RECURSION..........
 			}
 			else//cant sub divide further
@@ -176,7 +176,7 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 			funcAddLeafRecursively(m_ptrTopLeftChild, m_ptTopLeft, middlePt, ptrBoidToAdd);
 		//top Right sub Quad- uses  middleUpPt and middleRightPt
 		if ((pt.x > middleUpPt.x && pt.x < middleRightPt.x) && (pt.y > middleUpPt.y && pt.y < middleRightPt.y))
-			funcAddLeafRecursively(m_ptrTopRightChild, middleUpPt, middleRightPt, ptrBoidToAdd);			
+			funcAddLeafRecursively(m_ptrTopRightChild, middleUpPt, middleRightPt, ptrBoidToAdd);
 		//bottom Left  sub Quad- uses middleLeftPt and middleDownPt
 		if ((pt.x > middleLeftPt.x && pt.x < middleDownPt.x) && (pt.y > middleLeftPt.y && pt.y < middleDownPt.y))
 			funcAddLeafRecursively(m_ptrBottomLeftChild, middleLeftPt, middleDownPt, ptrBoidToAdd);
@@ -196,6 +196,6 @@ void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)
 	if (ptrRoot)
 	{
 		for (CBoid& b : boids)
-			ptrRoot->AddBoid(&b);
+			ptrRoot->AddBoid(&b);//change to call to update
 	}
 }

@@ -45,4 +45,3 @@ private:
 	bool m_bRoot;
 	std::vector<CBoid*> m_pLeaves;//convert to shared ptr:TODO
 };
-

@@ -20,6 +20,8 @@ public:
 	bool HasLeaves() const;
 	void RemoveLeaves();
 	CBoid* GetTopLeaf();
+	void SetParent(CQuad* pParent);
+	CQuad* GetParent();
 
 	void SetTopLeft(CQuad* ptrTopLeftChild);
 	void SetTopRight(CQuad* ptrTopRightChild);
@@ -28,8 +30,8 @@ public:
 
 	bool HasNoChildQuad();
 
-	void AddBoid(CBoid* ptrBoidToAdd);//This can be recursive and ends up calling AddLeaf
-	void UpdateBoid(CBoid* ptrBoidToUpdate);
+	bool AddBoid(CBoid* ptrBoidToAdd);//This can be recursive and ends up calling AddLeaf
+	bool UpdateBoid(CBoid* ptrBoidToUpdate);
 	bool CanSubDivideFurther();
 
 	void DestroyChildQuads();
@@ -42,7 +44,8 @@ private:
 	CQuad* m_ptrTopRightChild;
 	CQuad* m_ptrBottomLeftChild;
 	CQuad* m_ptrBottomRightChild;
-	
-	bool m_bRoot;
+
+	CQuad* m_pPtrParent;//so as to traverse up the tree
+
 	std::vector<CBoid*> m_pLeaves;//convert to shared ptr:TODO
 };

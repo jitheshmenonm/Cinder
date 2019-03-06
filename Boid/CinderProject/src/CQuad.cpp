@@ -3,16 +3,17 @@
 #include "CBoid.h"
 #include "CQuad.h"
 
-CQuad::CQuad() :m_bRoot(false),
+CQuad::CQuad() :
 m_ptTopLeft(0.0, 0.0),
 m_ptBottomRight(0.0, 0.0),
 m_ptrTopLeftChild(nullptr),
 m_ptrTopRightChild(nullptr),
 m_ptrBottomLeftChild(nullptr),
-m_ptrBottomRightChild(nullptr)
+m_ptrBottomRightChild(nullptr),
+m_pPtrParent(nullptr)
 {
 }
-CQuad::CQuad(vec2 ptTl, vec2 ptBr) :m_bRoot(false),
+CQuad::CQuad(vec2 ptTl, vec2 ptBr) :
 m_ptTopLeft(ptTl),
 m_ptBottomRight(ptBr),
 m_ptrTopLeftChild(nullptr),
@@ -22,9 +23,19 @@ m_ptrBottomRightChild(nullptr)
 {
 
 }
+void CQuad::SetParent(CQuad* pParent)
+{
+	m_pPtrParent = pParent;
+}
+
+CQuad* CQuad::GetParent()
+{
+	return m_pPtrParent;
+}
 
 CQuad::~CQuad()
 {
+
 }
 
 void CQuad::DestroyChildQuads()
@@ -57,12 +68,12 @@ void CQuad::DestroyChildQuads()
 
 void CQuad::SetRoot()
 {
-	m_bRoot = true;
+	m_pPtrParent = nullptr;
 }
 
 bool CQuad::IsRoot() const
 {
-	return m_bRoot;
+	return (!m_pPtrParent) ? true : false;
 }
 
 void CQuad::AddLeaf(CBoid* ptr)
@@ -134,8 +145,9 @@ CBoid* CQuad::GetTopLeaf()
 	return nullptr;
 }
 
-void CQuad::AddBoid(CBoid* ptrBoidToAdd)
+bool CQuad::AddBoid(CBoid* ptrBoidToAdd)
 {
+	bool returnVal = false;
 	//This is called recursively till the boid become a leaf in one of the Quad nodes
 	glm::vec2 pt = ptrBoidToAdd->GetPos();
 	if (IsPtInsideQuad(pt))
@@ -151,7 +163,7 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 		glm::vec2 middleRightPt((m_ptTopLeft.x + QuadWidth), (m_ptTopLeft.y + (QuadHeight / 2.0)));
 
 
-		auto funcAddLeafRecursively = [](CQuad*& pQuad, glm::vec2 tlPt, glm::vec2 brPt, CBoid* ptrBoid) mutable
+		auto funcAddLeafRecursively = [&returnVal](CQuad*& pQuad, glm::vec2 tlPt, glm::vec2 brPt, CBoid* ptrBoid) mutable
 		{
 			if (!pQuad)
 				pQuad = new CQuad(tlPt, brPt);//Use object pools so as to allocate memory in chunk firsthand:TODO
@@ -169,39 +181,80 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 				pQuad->AddBoid(ptrBoid);///RECURSION..........
 			}
 			else//cant sub divide further
+			{
 				pQuad->AddLeaf(ptrBoid);//add leaf to sub tree				
+				returnVal = true;
+			}
 		};
 
 		//top Left sub Quad- uses m_ptTopLeft and middlePt
 		if ((pt.x > m_ptTopLeft.x && pt.x < middlePt.x) && (pt.y > m_ptTopLeft.y && pt.y < middlePt.y))
+		{
 			funcAddLeafRecursively(m_ptrTopLeftChild, m_ptTopLeft, middlePt, ptrBoidToAdd);
+			m_ptrTopLeftChild->SetParent(this);
+		}
 		//top Right sub Quad- uses  middleUpPt and middleRightPt
-		if ((pt.x > middleUpPt.x && pt.x < middleRightPt.x) && (pt.y > middleUpPt.y && pt.y < middleRightPt.y))
+		if (!returnVal && (pt.x > middleUpPt.x && pt.x < middleRightPt.x) && (pt.y > middleUpPt.y && pt.y < middleRightPt.y))
+		{
 			funcAddLeafRecursively(m_ptrTopRightChild, middleUpPt, middleRightPt, ptrBoidToAdd);
+			m_ptrTopRightChild->SetParent(this);
+		}
 		//bottom Left  sub Quad- uses middleLeftPt and middleDownPt
-		if ((pt.x > middleLeftPt.x && pt.x < middleDownPt.x) && (pt.y > middleLeftPt.y && pt.y < middleDownPt.y))
+		if (!returnVal && (pt.x > middleLeftPt.x && pt.x < middleDownPt.x) && (pt.y > middleLeftPt.y && pt.y < middleDownPt.y))
+		{
 			funcAddLeafRecursively(m_ptrBottomLeftChild, middleLeftPt, middleDownPt, ptrBoidToAdd);
+			m_ptrBottomLeftChild->SetParent(this);
+		}
 		//bottom Right sub Quad- uses middlePt and m_ptBottomRight
-		if ((pt.x > middlePt.x && pt.x < m_ptBottomRight.x) && (pt.y > middlePt.y && pt.y < m_ptBottomRight.y))
+		if (!returnVal && (pt.x > middlePt.x && pt.x < m_ptBottomRight.x) && (pt.y > middlePt.y && pt.y < m_ptBottomRight.y))
+		{
 			funcAddLeafRecursively(m_ptrBottomRightChild, middlePt, m_ptBottomRight, ptrBoidToAdd);
-	}
-}
-
-void CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
-{
-	//find the boid traversing the tree and see if it still belongs to the quad
-	//or look up in the tree to see if it belongs to that. continue until root(in case boid gets outside window)
-	auto it = std::find_if(m_pLeaves.begin(), m_pLeaves.end(), 
-		[&](CBoid* p) { return p->GetId() == ptrBoidToUpdate->GetId(); });
-	if (it != m_pLeaves.end())
-	{
-		//check if still belongs to this quad
+			m_ptrBottomRightChild->SetParent(this);
+		}		
 	}
 	else
 	{
-		//look in children for this boid
-
+		if (this->GetParent())
+			returnVal = this->GetParent()->AddBoid(ptrBoidToAdd);
 	}
+	return returnVal;
+}
+
+bool CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
+{
+	bool returnVal = false;
+	//find the boid traversing the tree and see if it still belongs to the quad
+	//or look up in the tree to see if it belongs to that. continue until root(in case boid gets outside window)
+	if (HasLeaves())
+	{
+		auto it = std::find_if(m_pLeaves.begin(), m_pLeaves.end(),
+			[&](CBoid* p) { return p->GetId() == ptrBoidToUpdate->GetId(); });
+		if (it != m_pLeaves.end())
+		{
+			//check if still belongs to this quad
+			if (IsPtInsideQuad(ptrBoidToUpdate->GetPos()))
+				returnVal = true;
+			else			
+			{
+				m_pLeaves.erase(it);//remove leaf from this quad
+				if (this->GetParent())//look up in the parent if it has parent
+					returnVal = this->GetParent()->AddBoid(ptrBoidToUpdate);//Add to hopefully another sibling(hopefully)				
+			}	
+		}
+	}
+	else
+	{
+		//look in children for this boid-> recursive calls made
+		if(m_ptrTopLeftChild)
+			returnVal = m_ptrTopLeftChild->UpdateBoid(ptrBoidToUpdate);
+		if(!returnVal && m_ptrTopRightChild)
+			m_ptrTopRightChild->UpdateBoid(ptrBoidToUpdate);
+		if (!returnVal && m_ptrBottomLeftChild)
+			m_ptrBottomLeftChild->UpdateBoid(ptrBoidToUpdate);
+		if (!returnVal && m_ptrBottomRightChild)
+			m_ptrBottomRightChild->UpdateBoid(ptrBoidToUpdate);
+	}
+	return returnVal;
 }
 
 void DestroyQuadTree(CQuad* ptrRoot)

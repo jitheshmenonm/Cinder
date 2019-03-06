@@ -29,6 +29,7 @@ public:
 	bool HasNoChildQuad();
 
 	void AddBoid(CBoid* ptrBoidToAdd);//This can be recursive and ends up calling AddLeaf
+	void UpdateBoid(CBoid* ptrBoidToUpdate);
 	bool CanSubDivideFurther();
 
 	void DestroyChildQuads();

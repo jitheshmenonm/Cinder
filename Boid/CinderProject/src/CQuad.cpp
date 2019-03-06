@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include "CBoid.h"
 #include "CQuad.h"
 
@@ -186,6 +187,23 @@ void CQuad::AddBoid(CBoid* ptrBoidToAdd)
 	}
 }
 
+void CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
+{
+	//find the boid traversing the tree and see if it still belongs to the quad
+	//or look up in the tree to see if it belongs to that. continue until root(in case boid gets outside window)
+	auto it = std::find_if(m_pLeaves.begin(), m_pLeaves.end(), 
+		[&](CBoid* p) { return p->GetId() == ptrBoidToUpdate->GetId(); });
+	if (it != m_pLeaves.end())
+	{
+		//check if still belongs to this quad
+	}
+	else
+	{
+		//look in children for this boid
+
+	}
+}
+
 void DestroyQuadTree(CQuad* ptrRoot)
 {
 	ptrRoot->DestroyChildQuads();
@@ -196,6 +214,6 @@ void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)
 	if (ptrRoot)
 	{
 		for (CBoid& b : boids)
-			ptrRoot->AddBoid(&b);//change to call to update
+			ptrRoot->UpdateBoid(&b);
 	}
 }

@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define BOIDSIZE 40
+#define BOIDSIZE 100
 #define QUARTERBOIDSIZE 0.25*BOIDSIZE
 #define HALFBOIDSIZE 0.5*BOIDSIZE
 
@@ -17,7 +17,7 @@ public:
 	}
 	CBoid(float x, float y) :m_ptPos(x, y), m_Id(boidId++)
 	{
-		float min = 1.0;
+		float min = -3.0;
 		float max = 3.0;
 		m_velocity.x = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));
 		m_velocity.y = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));

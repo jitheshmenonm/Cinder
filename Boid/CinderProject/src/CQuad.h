@@ -22,6 +22,8 @@ public:
 	CBoid* GetTopLeaf();
 	void SetParent(CQuad* pParent);
 	CQuad* GetParent();
+	void CheckForCollisions();
+	void Draw();
 
 	void SetTopLeft(CQuad* ptrTopLeftChild);
 	void SetTopRight(CQuad* ptrTopRightChild);

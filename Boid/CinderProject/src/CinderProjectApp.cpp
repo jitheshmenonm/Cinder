@@ -48,14 +48,18 @@ bool double_equals(double a, double b)
 	return std::abs(a - b) < epsilon;
 }
 
-void DrawBoidAndObstacles()
+void DrawEverything()
 {
 	gl::color(Color(0, 0, 1)); // blue
 	for (auto boid : boids)
 		boid.Draw();
+
 	gl::color(Color(1, 0, 0)); // red
-	for (auto oc : obstacleCircles)
-		gl::drawSolidCircle(vec2(oc.x, oc.y), OBSTACLECIRCLERADIUS);
+	ptrRoot->Draw();		
+
+	//gl::color(Color(1, 0, 0)); // red
+	//for (auto oc : obstacleCircles)
+	//	gl::drawSolidCircle(vec2(oc.x, oc.y), OBSTACLECIRCLERADIUS);
 
 }
 void UpdateBoidPositions()
@@ -88,8 +92,8 @@ void CinderProjectApp::setup()
 
 void CinderProjectApp::mouseDown(MouseEvent event)
 {
-	if (event.isLeftDown())
-		obstacleCircles.emplace_back((float)event.getX(), (float)event.getY());
+	/*if (event.isLeftDown())
+		obstacleCircles.emplace_back((float)event.getX(), (float)event.getY());*/
 
 	if (event.isRightDown())
 		globalTarget = vec2((float)event.getX(), (float)event.getY());
@@ -110,7 +114,7 @@ void CinderProjectApp::keyDown(KeyEvent event)
 	if (event.getChar() == 'a')
 	{
 		boids.emplace_back(xCenter, yCenter);
-		ptrRoot->AddBoid(&boids.front());
+		ptrRoot->AddBoid(&boids.back());
 	}
 	else if (event.getChar() == 's')
 		bSeekTarget = true;
@@ -128,13 +132,14 @@ void CinderProjectApp::update()
 	{
 		//DestroyQuadTree(ptrRoot);
 		UpdateQuadTree(ptrRoot, boids);//update tree using latest boid locations
+		ptrRoot->CheckForCollisions();
 	}
 }
 
 void CinderProjectApp::draw()
 {
 	gl::clear(Color(0, 0, 0));
-	DrawBoidAndObstacles();
+	DrawEverything();
 }
 
 CINDER_APP(CinderProjectApp, RendererGl)

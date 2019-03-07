@@ -2,24 +2,28 @@
 #include <algorithm>
 #include "CBoid.h"
 #include "CQuad.h"
+#include "cinder/gl/gl.h"
+
+
+using namespace ci;
 
 CQuad::CQuad() :
-m_ptTopLeft(0.0, 0.0),
-m_ptBottomRight(0.0, 0.0),
-m_ptrTopLeftChild(nullptr),
-m_ptrTopRightChild(nullptr),
-m_ptrBottomLeftChild(nullptr),
-m_ptrBottomRightChild(nullptr),
-m_pPtrParent(nullptr)
+	m_ptTopLeft(0.0, 0.0),
+	m_ptBottomRight(0.0, 0.0),
+	m_ptrTopLeftChild(nullptr),
+	m_ptrTopRightChild(nullptr),
+	m_ptrBottomLeftChild(nullptr),
+	m_ptrBottomRightChild(nullptr),
+	m_pPtrParent(nullptr)
 {
 }
 CQuad::CQuad(vec2 ptTl, vec2 ptBr) :
-m_ptTopLeft(ptTl),
-m_ptBottomRight(ptBr),
-m_ptrTopLeftChild(nullptr),
-m_ptrTopRightChild(nullptr),
-m_ptrBottomLeftChild(nullptr),
-m_ptrBottomRightChild(nullptr)
+	m_ptTopLeft(ptTl),
+	m_ptBottomRight(ptBr),
+	m_ptrTopLeftChild(nullptr),
+	m_ptrTopRightChild(nullptr),
+	m_ptrBottomLeftChild(nullptr),
+	m_ptrBottomRightChild(nullptr)
 {
 
 }
@@ -145,6 +149,26 @@ CBoid* CQuad::GetTopLeaf()
 	return nullptr;
 }
 
+void CQuad::Draw()
+{
+	vec2 ptTopRight(m_ptTopLeft.x, m_ptBottomRight.y);
+	vec2 ptBottomLeft(m_ptBottomRight.x, m_ptTopLeft.y);
+
+	gl::drawLine(m_ptTopLeft, ptTopRight);
+	gl::drawLine(ptTopRight, m_ptBottomRight);
+	gl::drawLine(m_ptBottomRight, ptBottomLeft);
+	gl::drawLine(ptBottomLeft, m_ptTopLeft);
+
+	if (m_ptrTopLeftChild)
+		m_ptrTopLeftChild->Draw();
+	if (m_ptrTopRightChild)
+		m_ptrTopRightChild->Draw();
+	if (m_ptrBottomLeftChild)
+		m_ptrBottomLeftChild->Draw();
+	if (m_ptrBottomRightChild)
+		m_ptrBottomRightChild->Draw();
+}
+
 bool CQuad::AddBoid(CBoid* ptrBoidToAdd)
 {
 	bool returnVal = false;
@@ -210,7 +234,7 @@ bool CQuad::AddBoid(CBoid* ptrBoidToAdd)
 		{
 			funcAddLeafRecursively(m_ptrBottomRightChild, middlePt, m_ptBottomRight, ptrBoidToAdd);
 			m_ptrBottomRightChild->SetParent(this);
-		}		
+		}
 	}
 	else
 	{
@@ -234,20 +258,20 @@ bool CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
 			//check if still belongs to this quad
 			if (IsPtInsideQuad(ptrBoidToUpdate->GetPos()))
 				returnVal = true;
-			else			
+			else
 			{
 				m_pLeaves.erase(it);//remove leaf from this quad
 				if (this->GetParent())//look up in the parent if it has parent
 					returnVal = this->GetParent()->AddBoid(ptrBoidToUpdate);//Add to hopefully another sibling(hopefully)				
-			}	
+			}
 		}
 	}
 	else
 	{
 		//look in children for this boid-> recursive calls made
-		if(m_ptrTopLeftChild)
+		if (m_ptrTopLeftChild)
 			returnVal = m_ptrTopLeftChild->UpdateBoid(ptrBoidToUpdate);
-		if(!returnVal && m_ptrTopRightChild)
+		if (!returnVal && m_ptrTopRightChild)
 			m_ptrTopRightChild->UpdateBoid(ptrBoidToUpdate);
 		if (!returnVal && m_ptrBottomLeftChild)
 			m_ptrBottomLeftChild->UpdateBoid(ptrBoidToUpdate);
@@ -256,6 +280,33 @@ bool CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
 	}
 	return returnVal;
 }
+
+std::vector<int> collidedIDs;
+void CQuad::CheckForCollisions()
+{
+	//starts from root
+	if (!HasLeaves())
+	{
+		//look in children for this boid-> recursive calls made
+		if (m_ptrTopLeftChild)
+			m_ptrTopLeftChild->CheckForCollisions();
+		if (m_ptrTopRightChild)
+			m_ptrTopRightChild->CheckForCollisions();
+		if (m_ptrBottomLeftChild)
+			m_ptrBottomLeftChild->CheckForCollisions();
+		if (m_ptrBottomRightChild)
+			m_ptrBottomRightChild->CheckForCollisions();
+	}
+	else
+	{
+		if (NoOfLeaves() > 1)
+		{
+			for (auto pB : m_pLeaves)
+				collidedIDs.push_back(pB->GetId());
+		}
+	}
+}
+
 
 void DestroyQuadTree(CQuad* ptrRoot)
 {
@@ -270,3 +321,4 @@ void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)
 			ptrRoot->UpdateBoid(&b);
 	}
 }
+

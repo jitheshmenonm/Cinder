@@ -272,11 +272,11 @@ bool CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
 		if (m_ptrTopLeftChild)
 			returnVal = m_ptrTopLeftChild->UpdateBoid(ptrBoidToUpdate);
 		if (!returnVal && m_ptrTopRightChild)
-			m_ptrTopRightChild->UpdateBoid(ptrBoidToUpdate);
+			returnVal = m_ptrTopRightChild->UpdateBoid(ptrBoidToUpdate);
 		if (!returnVal && m_ptrBottomLeftChild)
-			m_ptrBottomLeftChild->UpdateBoid(ptrBoidToUpdate);
+			returnVal = m_ptrBottomLeftChild->UpdateBoid(ptrBoidToUpdate);
 		if (!returnVal && m_ptrBottomRightChild)
-			m_ptrBottomRightChild->UpdateBoid(ptrBoidToUpdate);
+			returnVal = m_ptrBottomRightChild->UpdateBoid(ptrBoidToUpdate);
 	}
 	return returnVal;
 }
@@ -318,7 +318,9 @@ void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)
 	if (ptrRoot)
 	{
 		for (CBoid& b : boids)
-			ptrRoot->UpdateBoid(&b);
+		{
+			bool returnVal = ptrRoot->UpdateBoid(&b);
+			assert(returnVal);
+		}
 	}
 }
-

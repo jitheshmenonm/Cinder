@@ -55,7 +55,7 @@ void DrawEverything()
 		boid.Draw();
 
 	gl::color(Color(1, 0, 0)); // red
-	ptrRoot->Draw();		
+	ptrRoot->Draw();
 
 	//gl::color(Color(1, 0, 0)); // red
 	//for (auto oc : obstacleCircles)
@@ -88,12 +88,13 @@ void CinderProjectApp::setup()
 	setWindowSize(WINDOWSIZEX, WINDOWSIZEY);
 	ptrRoot = new CQuad(glm::vec2(0.0, 0.0), glm::vec2((float)WINDOWSIZEX, (float)WINDOWSIZEY));
 	ptrRoot->SetRoot();
+	boids.reserve(200);
 }
 
 void CinderProjectApp::mouseDown(MouseEvent event)
 {
 	/*if (event.isLeftDown())
-		obstacleCircles.emplace_back((float)event.getX(), (float)event.getY());*/
+	obstacleCircles.emplace_back((float)event.getX(), (float)event.getY());*/
 
 	if (event.isRightDown())
 		globalTarget = vec2((float)event.getX(), (float)event.getY());
@@ -105,14 +106,20 @@ void CinderProjectApp::mouseDown(MouseEvent event)
 }
 void CinderProjectApp::keyDown(KeyEvent event)
 {
-	float min = 100.0;
+	/*float min = 100.0;
 	float max = WINDOWSIZEX - 100.0f;
 	float xCenter = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));
 	min = 100.0; max = WINDOWSIZEY - 100.0;
-	float yCenter = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));
+	float yCenter = static_cast <float> (min + (rand() % static_cast<int>(max - min + 1)));*/
 
+	float xCenter = 100.0f;
+	float yCenter = 100.0f;
 	if (event.getChar() == 'a')
 	{
+		boids.emplace_back(xCenter, yCenter);
+		ptrRoot->AddBoid(&boids.back());
+		xCenter = 500.0f;
+		yCenter = 500.0f;
 		boids.emplace_back(xCenter, yCenter);
 		ptrRoot->AddBoid(&boids.back());
 	}

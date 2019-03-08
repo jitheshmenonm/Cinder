@@ -90,6 +90,7 @@ void CQuad::AddLeaf(CBoid* ptr)
 			assert(p);
 		}
 	}
+	ptr->SetQuad(this);
 	m_pLeaves.push_back(ptr);
 }
 
@@ -221,12 +222,12 @@ bool CQuad::AddBoid(CBoid* ptrBoidToAdd)
 					pQuad->AddBoid(pQuad->GetTopLeaf());///RECURSION..........
 					pQuad->RemoveLeaves();//reset current leaves					
 
-					//now add the current one as leaf
+										  //now add the current one as leaf
 					returnVal = pQuad->AddBoid(ptrBoid);///RECURSION..........
 				}
 				else
 				{
-					if(!pQuad->HasLeafWithId(ptrBoid->GetId()))//cant sub divide further
+					if (!pQuad->HasLeafWithId(ptrBoid->GetId()))//cant sub divide further
 					{
 						pQuad->AddLeaf(ptrBoid);//add leaf to sub tree				
 						returnVal = true;
@@ -276,37 +277,23 @@ bool CQuad::AddBoid(CBoid* ptrBoidToAdd)
 bool CQuad::UpdateBoid(CBoid* ptrBoidToUpdate)
 {
 	bool returnVal = false;
-	//find the boid traversing the tree and see if it still belongs to the quad
-	//or look up in the tree to see if it belongs to that. continue until root(in case boid gets outside window)
-	if (HasLeaves())
+	if (!IsPtInsideQuad(ptrBoidToUpdate->GetPos()))
 	{
+		//find the boid traversing the tree and see if it still belongs to the quad
+		//or look up in the tree to see if it belongs to that. continue until root(in case boid gets outside window)
 		auto it = std::find_if(m_pLeaves.begin(), m_pLeaves.end(),
 			[&](CBoid* p) { return p->GetId() == ptrBoidToUpdate->GetId(); });
 		if (it != m_pLeaves.end())
 		{
-			//check if still belongs to this quad
-			if (IsPtInsideQuad(ptrBoidToUpdate->GetPos()))
-				returnVal = true;
-			else
-			{
-				m_pLeaves.erase(it);//remove leaf from this quad
-				if (this->GetParent())//look up in the parent if it has parent
-					returnVal = this->GetParent()->AddBoid(ptrBoidToUpdate);//Add to hopefully another sibling(hopefully)				
-			}
+			ptrBoidToUpdate->SetQuad(nullptr);//reset quad ptr
+			m_pLeaves.erase(it);//remove leaf from this quad
 		}
+		if (this->GetParent())//look up in the parent if it has parent
+			returnVal = this->GetParent()->AddBoid(ptrBoidToUpdate);//Add to hopefully another sibling(hopefully)
 	}
 	else
-	{
-		//look in children for this boid-> recursive calls made
-		if (m_ptrTopLeftChild)
-			returnVal = m_ptrTopLeftChild->UpdateBoid(ptrBoidToUpdate);
-		if (!returnVal && m_ptrTopRightChild)
-			returnVal = m_ptrTopRightChild->UpdateBoid(ptrBoidToUpdate);
-		if (!returnVal && m_ptrBottomLeftChild)
-			returnVal = m_ptrBottomLeftChild->UpdateBoid(ptrBoidToUpdate);
-		if (!returnVal && m_ptrBottomRightChild)
-			returnVal = m_ptrBottomRightChild->UpdateBoid(ptrBoidToUpdate);
-	}
+		returnVal = true;//inside same quad still
+
 	return returnVal;
 }
 
@@ -350,11 +337,10 @@ void UpdateQuadTree(CQuad * ptrRoot, std::vector<CBoid>& boids)
 	{
 		for (CBoid& b : boids)
 		{
-			bool returnVal = ptrRoot->UpdateBoid(&b);
-			//assert(returnVal);
-			if (!returnVal)
-				returnVal = ptrRoot->AddBoid(&b);
-			//assert(returnVal);
+			CQuad* pQuad = b.GetQuad();
+			bool returnVal = pQuad->UpdateBoid(&b);
+			assert(returnVal);			
 		}
 	}
 }
+

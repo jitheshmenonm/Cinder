@@ -35,6 +35,7 @@ public:
 	bool AddBoid(CBoid* ptrBoidToAdd);//This can be recursive and ends up calling AddLeaf
 	bool UpdateBoid(CBoid* ptrBoidToUpdate);
 	bool CanSubDivideFurther();
+	bool HasLeafWithId(int nId);
 
 	void DestroyChildQuads();
 

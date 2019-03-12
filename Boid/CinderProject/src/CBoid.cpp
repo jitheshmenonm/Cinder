@@ -12,6 +12,9 @@ extern void Logtofile(std::string name, float value);
 
 void CBoid::UpdateLocation()
 {
+	if (m_bSeekTarget)
+		Seek();
+
 	m_ptPos.x += m_velocity.x;
 	m_ptPos.y += m_velocity.y;
 	if (m_ptPos.x<0)
@@ -24,11 +27,17 @@ void CBoid::UpdateLocation()
 		m_ptPos.y -= 600;
 }
 
-void CBoid::Seek(vec2 target)
+void CBoid::SetSeekLocal(vec2 target)
 {
-	if (!double_equals(target.x, m_ptPos.x) || !double_equals(target.y, m_ptPos.y))
+	m_pLocaltarget = target;
+	m_bSeekTarget = true;
+}
+
+void CBoid::Seek()
+{
+	if (!double_equals(m_pLocaltarget.x, m_ptPos.x) || !double_equals(m_pLocaltarget.y, m_ptPos.y))
 	{
-		vec2 targetDirection = glm::normalize(target - m_ptPos);
+		vec2 targetDirection = glm::normalize(m_pLocaltarget - m_ptPos);
 		float targetAngle = glm::degrees(atan2(targetDirection.y, targetDirection.x));		
 		if (targetAngle < 0)
 			targetAngle += 360.0f;
@@ -50,10 +59,15 @@ void CBoid::Seek(vec2 target)
 		if (m_OrientationAngle < 0.)
 			m_OrientationAngle += 360.;
 		///
-		m_velocity = glm::normalize(target - m_ptPos);
+		float len = (float)(m_velocity.length());
+		m_velocity = glm::normalize(m_pLocaltarget - m_ptPos);
+		m_velocity *= len;
 	}
 	else
-		m_velocity.x = m_velocity.y = 0.;
+	{
+		//assert(!m_bSeekTarget);
+		m_bSeekTarget = false;//stop seek target
+	}
 }
 
 void CBoid::Draw()

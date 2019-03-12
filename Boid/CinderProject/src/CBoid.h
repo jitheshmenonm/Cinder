@@ -15,10 +15,10 @@ class CQuad;
 class CBoid
 {
 public:
-	CBoid() :m_ptPos(100.0, 100.0), m_velocity(1.0, 0.0), m_OrientationAngle(0.0), m_Id(boidId), m_ptrQuad(nullptr)
+	CBoid() :m_ptPos(100.0, 100.0), m_velocity(1.0, 0.0), m_OrientationAngle(0.0), m_Id(boidId), m_ptrQuad(nullptr), m_bSeekTarget(false)
 	{
 	}
-	CBoid(float x, float y) :m_ptPos(x, y), m_Id(boidId++), m_ptrQuad(nullptr)
+	CBoid(float x, float y) :m_ptPos(x, y), m_Id(boidId++), m_ptrQuad(nullptr), m_bSeekTarget(false)
 	{
 		float min = 0.0;// -3.0;
 		float max = 3.0;
@@ -47,7 +47,9 @@ public:
 	float GetOrientation() { return m_OrientationAngle; }
 	int GetId() { return m_Id; }
 	void UpdateLocation();
-	void Seek(vec2 target);
+	void SetSeekLocal(vec2 target);
+	void StopSeek() {	m_bSeekTarget = false;}
+	void Seek();
 	void Draw();
 	void SetQuad(CQuad* p) { m_ptrQuad = p; }
 	CQuad* GetQuad() { return m_ptrQuad; }
@@ -58,5 +60,8 @@ private:
 	float m_OrientationAngle;
 	int m_Id;
 	CQuad * m_ptrQuad;
+	vec2 m_pLocaltarget;
+	vec2 m_pGlobaltarget;
+	bool m_bSeekTarget;
 
 };

@@ -317,8 +317,14 @@ void CQuad::CheckForCollisions()
 	{
 		if (NoOfLeaves() > 1)
 		{
+			/*To determine which side of the line from A = (x1, y1) to B = (x2, y2) a point P = (x, y) falls on you need to compute the value
+			d = (x-x1)(y2-y1)-(y-y1)(x2-x1)
+			If d<0 then the point lies on one side of the line, and if d>0 then it lies on the other side.If d = 0 then the point lies exactly line.
+			To see whether points on the left side of the line are those with positive or negative values compute the value for d for a point you know
+			is to the left of the line, such as(x1?1, y1) and then compare the sign with the point you are interested in.*/
+
 			bool p = false;
-			assert(p);
+			//assert(p);
 			for (auto pB : m_pLeaves)
 				collidedIDs.push_back(pB->GetId());
 		}

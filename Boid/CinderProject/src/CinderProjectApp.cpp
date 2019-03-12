@@ -44,7 +44,7 @@ void Logtofile(std::string name, float value)
 
 bool double_equals(double a, double b)
 {
-	double epsilon = 0.001;
+	double epsilon = 0.5;
 	return std::abs(a - b) < epsilon;
 }
 
@@ -54,8 +54,8 @@ void DrawEverything()
 	for (auto boid : boids)
 		boid.Draw();
 
-	gl::color(Color(1, 0, 0)); // red
-	ptrRoot->Draw();
+	//gl::color(Color(1, 0, 0)); // red
+	//ptrRoot->Draw();
 
 	//gl::color(Color(1, 0, 0)); // red
 	//for (auto oc : obstacleCircles)
@@ -65,11 +65,7 @@ void DrawEverything()
 void UpdateBoidPositions()
 {
 	for (auto & boid : boids)
-	{
-		if (bSeekTarget)
-			boid.Seek(globalTarget);
-		boid.UpdateLocation();
-	}
+		boid.UpdateLocation();	
 }
 
 class CinderProjectApp : public App {
@@ -124,12 +120,32 @@ void CinderProjectApp::keyDown(KeyEvent event)
 		ptrRoot->AddBoid(&boids.back());*/
 	}
 	else if (event.getChar() == 's')
+	{
 		bSeekTarget = true;
+		for (auto & boid : boids)
+		{
+			boid.SetSeekLocal(globalTarget);
+		}
+	}
+	else if (event.getChar() == 'd')
+	{
+		bSeekTarget = false;
+		for (auto & boid : boids)
+		{
+			boid.StopSeek();
+		}
+	}
 }
 void CinderProjectApp::mouseMove(MouseEvent event)
 {
 	if (bSeekTarget)
+	{
 		globalTarget = vec2((float)event.getX(), (float)event.getY());
+		for (auto & boid : boids)
+		{
+			boid.SetSeekLocal(globalTarget);
+		}
+	}
 }
 
 void CinderProjectApp::update()
